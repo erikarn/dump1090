@@ -74,7 +74,33 @@
         Planes[Selected].marker.setIcon(getIconForPlane(Planes[Selected]));
         refreshSelectedInfo();
     }
-    
+
+    // Select a plane based on the clicked link from the plane list.
+    // This will move the centre of the map to the current plane
+    // (ideally only if it isn't visible on the map currently!)
+    // and mark it selected.
+    function selectPlaneLink(plane) {
+      var mp = Planes[plane];
+      var old;
+
+      if (!mp) return;
+
+      var pos = {
+        lat: mp.lat,
+        lng: mp.lon,
+      };
+      _Map.setCenter(pos);
+
+      // Duplicate code to set the plane as active.
+      old = Selected;
+      Selected = plane;
+      if (Planes[old]) {
+          Planes[old].marker.setIcon(getIconForPlane(Planes[old]));
+      }
+      Planes[Selected].marker.setIcon(getIconForPlane(Planes[Selected]));
+      refreshSelectedInfo();
+    }
+
     function refreshGeneralInfo() {
         var i = document.getElementById('geninfo');
 
@@ -93,6 +119,27 @@
         html += 'Altitude: '+p.altitude+' feet<br>';
         html += 'Speed: '+p.speed+' knots<br>';
         html += 'Coordinates: '+p.lat+', '+p.lon+'<br>';
+        i.innerHTML = html;
+    }
+
+    function refreshListInfo() {
+        var i = document.getElementById('listinfo');
+        var html = "";
+        // Yes, this should be sorted and less terrible.
+        for (var p in Planes) {
+          var mp = Planes[p];
+          var mh = "'" + mp.hex + "'";
+          html += '<a href="javascript:selectPlaneLink(' + mh + ');">';
+          html += 'ICAO: '+mp.hex+'<br>';
+          html += '</a>';
+          if (mp.flight.length) {
+              html += '<b>'+mp.flight+'</b><br>';
+          }
+          html += 'Altitude: '+mp.altitude+' feet, ';
+          html += 'Speed: '+mp.speed+' knots<br>';
+          html += 'Coordinates: '+mp.lat+', '+mp.lon+'<br>';
+        }
+
         i.innerHTML = html;
     }
 
@@ -166,7 +213,7 @@
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
-            Map.setCenter(pos);
+            _Map.setCenter(pos);
             }, function() {
              handleLocationError(true, infoWindow, Map.getCenter());
             });
@@ -179,6 +226,7 @@
         window.setInterval(function() {
             fetchData();
             refreshGeneralInfo();
+            refreshListInfo();
         }, 1000);
     }
 
@@ -191,6 +239,7 @@
         <h1>Dump1090</h1>
         <p id="geninfo"></p>
         <p id="selinfo">Click on a plane for info.</p>
+        <p id="listinfo"></p>
       </div>
     </div>
   </body>
