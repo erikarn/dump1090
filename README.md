@@ -58,6 +58,14 @@ In interactive mode it is possible to have a less information dense but more
 all the recently seen aircrafts with some additional information such as
 altitude and flight number, extracted from the received Mode S packets.
 
+Using the Google map
+---
+
+Google began enforcing the use of a google maps API key for the map to operate.
+You will need to replace ${KEY} in gmap.html with your personal API key.
+
+For more information, see <https://developers.google.com/maps/documentation/embed/get-api-key> .
+
 Using files as source of data
 ---
 
