@@ -47,9 +47,12 @@
     NumPlanes = 0;
     Selected=null
 
+    // XXX TODO: should replace this with a simple plane image or
+    // XXX TODO: something that is guaranteed to be the same on all
+    // XXX TODO: platforms!
     function getIconForPlane(plane) {
         var r = 255, g = 255, b = 0;
-        var maxalt = 40000; /* Max altitude in the average case */
+        var maxalt = 60000; /* Max altitude in the average case */
         var invalt = maxalt-plane.altitude;
         var selected = (Selected == plane.hex);
 
@@ -65,12 +68,13 @@
         var rotation = 45+360-plane.track;
         var selhtml = '';
 
-        /* Give a border to the selected plane. */
+        /* Give a border and background to the selected plane. */
         if (Selected == plane.hex) {
-            selhtml = 'border:1px dotted #0000aa; border-radius:10px;';
+            selhtml = 'border:1px dotted #0000aa; border-radius:10px; background-color: blue';
         } else {
             selhtml = '';
         }
+	// Yes, this is a plane emoji!
         he = '<div style="transform: rotate(-'+rotation+'deg); '+selhtml+'">✈️</div>';
         var icon = L.divIcon({html: he, className: 'plane-icon'});
         return icon;
@@ -86,6 +90,35 @@
         }
         Planes[Selected].marker.setIcon(getIconForPlane(Planes[Selected]));
         refreshSelectedInfo();
+    }
+
+    // Select a plane based on the clicked link from the plane list.
+    // This will move the centre of the map to the current plane
+    // (ideally only if it is not visible on the map currently!)
+    // and mark it selected.
+    function selectPlaneLink(plane) {
+      var mp = Planes[plane];
+      var old;
+
+      //console.log('Plane: ' + plane);
+
+      if (!mp) return;
+
+      // Move to that spot
+      Map.panTo([mp.lat, mp.lon]);
+
+      // Set plane as active - yeah, this is copy/pasta
+      old = Selected;
+      Selected = plane;
+
+      // XXX TODO: fix copypasta!
+      if (Planes[old]) {
+          // Remove the highlight in the previously selected plane. 
+          Planes[old].marker.setIcon(getIconForPlane(Planes[old]));
+      }
+      Planes[Selected].marker.setIcon(getIconForPlane(Planes[Selected]));
+
+      refreshSelectedInfo();
     }
 
     /* Return a closure to caputure the 'hex' argument. This way we don't
@@ -115,6 +148,29 @@
         html += 'Speed: '+p.speed+' knots<br>';
         html += 'Coordinates: '+p.lat+', '+p.lon+'<br>';
         i.innerHTML = html;
+    }
+
+    function refreshListInfo() {
+      var i = document.getElementById('listinfo');
+      var html = "";
+
+      // Yes, this should be sorted and less terrible
+
+      for (var p in Planes) {
+        var mp = Planes[p];
+	var mh = "'" + mp.hex + "'";
+	html += '<a href="javascript:selectPlaneLink(' + mh + ');">';
+	html += 'ICAO: ' + mp.hex + '<br>';
+	html += '</a>';
+	if (mp.flight.length) {
+	  html += '<b>' + mp.flight + '</b><br>';
+	}
+
+	html += 'Altitude: ' + mp.altitude + ' feet, ';
+	html += 'Speed: ' + mp.speed + ' knots</br>';
+	html += 'Coordinates: ' + mp.lat + ', ' + mp.lon + '<br>';
+      }
+      i.innerHTML = html;
     }
 
     function fetchData() {
@@ -168,6 +224,7 @@
     }
 
     function initialize() {
+        // This sets the default location, and we should try to geolocate if possible
         Map = L.map('map_canvas').setView([37.0, 13.0], 8);
 
 	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -181,7 +238,8 @@
         window.setInterval(function() {
             fetchData();
             refreshGeneralInfo();
-        }, 100);
+	    refreshListInfo();
+        }, 250);
     }
 
     </script>
@@ -193,6 +251,7 @@
         <h1>Dump1090</h1>
         <p id="geninfo"></p>
         <p id="selinfo">Click on a plane for info.</p>
+        <p id="listinfo"></p>
       </div>
     </div>
   </body>
