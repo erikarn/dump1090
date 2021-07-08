@@ -205,7 +205,9 @@
                     }
                 } else {
                     var icon = getIconForPlane(plane);
-                    var marker = L.marker([plane.lat, plane.lon], {icon: icon}).addTo(Map);
+                    var marker = L.marker([plane.lat, plane.lon], {icon: icon})
+//                      .bindTooltip("", {permanent: true, direction: 'right', opacity: 0.9})
+                      .addTo(Map);
                     var hex = plane.hex;
                     marker.on('click',selectPlaneCallback(plane.hex));
                     plane.marker = marker;
@@ -213,11 +215,13 @@
                     Planes[plane.hex] = plane;
                 }
 
-                // FIXME: Set the title
-                // if (plane.flight.length == 0)
-                //     marker.setTitle(plane.hex)
-                // else
-                //    marker.setTitle(plane.flight+' ('+plane.hex+')')
+                // XXX TODO: need to make the tooltips configurable and less .. annoying
+                // XXX TODO: the icon type being used is simply text with an embedded
+                // XXX TODO: plane emoji, making it difficult to add another text label. :(
+                //if (plane.flight.length == 0)
+                //  marker.setTooltipContent(plane.hex);
+                //else
+                //  marker.setTooltipContent(plane.flight+' ('+plane.hex+')');
             }
             NumPlanes = data.length;
 
