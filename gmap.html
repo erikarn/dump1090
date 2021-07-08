@@ -107,16 +107,8 @@
       // Move to that spot
       Map.panTo([mp.lat, mp.lon]);
 
-      // Set plane as active - yeah, this is copy/pasta
-      old = Selected;
-      Selected = plane;
-
-      // XXX TODO: fix copypasta!
-      if (Planes[old]) {
-          // Remove the highlight in the previously selected plane. 
-          Planes[old].marker.setIcon(getIconForPlane(Planes[old]));
-      }
-      Planes[Selected].marker.setIcon(getIconForPlane(Planes[Selected]));
+      // Set plane as active; remove old active plane
+      selectPlane(plane);
 
       refreshSelectedInfo();
     }
@@ -135,11 +127,25 @@
         i.innerHTML = NumPlanes+' planes on screen.';
     }
 
+    // Clear the selected information area.
+    //
+    // This is normally called when the plane is deleted from the active list.
+    function clearSelectedInfo() {
+        var i = document.getElementById('selinfo');
+        i.innerHTML = "";
+        return;
+    }
+
+    // Update the selected information area.
     function refreshSelectedInfo() {
         var i = document.getElementById('selinfo');
         var p = Planes[Selected];
 
-        if (!p) return;
+        // If the plane doesn't exist, just blank the selected info field
+        if (!p) {
+          i.innerHTML = "";
+          return;
+        }
         var html = 'ICAO: '+p.hex+'<br>';
         if (p.flight.length) {
             html += '<b>'+p.flight+'</b><br>';
@@ -193,8 +199,10 @@
                     myplane.lon = plane.lon;
                     myplane.track = plane.track;
                     myplane.flight = plane.flight;
-                    if (myplane.hex == Selected)
+                    // Update the selected plane info if this is it!
+                    if (myplane.hex == Selected) {
                         refreshSelectedInfo();
+                    }
                 } else {
                     var icon = getIconForPlane(plane);
                     var marker = L.marker([plane.lat, plane.lon], {icon: icon}).addTo(Map);
@@ -216,6 +224,11 @@
             /* Remove idle planes. */
             for (var p in Planes) {
                 if (!stillhere[p]) {
+                    // TODO: just check if Selected exists at the end and
+                    // if not, call clearSelectedInfo()
+                    if (Planes[p].hex == Selected) {
+                        clearSelectedInfo();
+                    }
                     Map.removeLayer(Planes[p].marker);
                     delete Planes[p];
                 }
